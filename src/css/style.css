@@ -55,7 +55,25 @@ body {
 }
 
 .box p {
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 5%;
+}
+
+.project_box {
+    position: relative;
+}
+
+.project_info {
+    width: 192px;
+    float: left;
+    margin-left: 20px;
+}
+
+.project_info img {
+    border: 1px dotted grey;
+    padding: 2px;
+}
+
+.project_details {
+    margin-left: 230px;
+    position: relative;
 }
