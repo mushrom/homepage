@@ -45,6 +45,7 @@ body {
 
 .sec_title {
     background-color: #505050;
+    border-bottom: 3px solid #c0d0c0;
     color: #f0f0f0;
     padding: 5px;
     clear: both;
@@ -76,4 +77,14 @@ body {
 .project_details {
     margin-left: 230px;
     position: relative;
+}
+
+.sec_title a {
+    color: #e0e8e0;
+    text-decoration: none;
+}
+
+.sec_title a:hover {
+    color: #e0e0e0;
+    text-decoration: underline;
 }

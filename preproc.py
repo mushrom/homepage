@@ -84,6 +84,7 @@ def parseFile( inputName, output, variables ):
 
     lineNum = 1
     line = inputFile.readline( )
+    do_output = True;
 
     while line != '':
         if preprocess and cmdStr in line and cmdStrEnd in line:
@@ -99,13 +100,14 @@ def parseFile( inputName, output, variables ):
             line = line[ cmdStart : cmdEnd ]
             command = line.split( )
 
-            output.write( head )
+            if do_output:
+                output.write( head )
 
             # evaluate the command
             if len( command ) < 1:
                 print( "    Warning: empty command tag at " + inputName + ":" + str( lineNum ))
 
-            else:
+            elif do_output:
                 if   command[0] == "include" and len( command ) > 1:
                     print( "    Including " + ", ".join( command[1:] ))
                     for include in command[1:]:
@@ -121,13 +123,39 @@ def parseFile( inputName, output, variables ):
                     variables.update({ command[1] : " ".join( command[2:] )})
                     print( "    Set variable " + command[1] + " to " + variables[ command[1] ] )
 
-                else:
-                    print( "    Warning: Unknown command '" + command[0] + "' at " + inputName + ":" + str( lineNum ))
+                elif command[0] == "if"  and len( command ) == 2:
+                    condition = ""
 
+                    if command[1] in variables:
+                        condition = variables[command[1]]
+                    else:
+                        condition = "false"
+
+                    print( "    if " + command[1] + ": " + condition );
+                    do_output = condition == "true";
+
+                elif command[0] == "ifnot" and len( command ) == 2:
+                    condition = ""
+
+                    if command[1] in variables:
+                        condition = variables[command[1]]
+                    else:
+                        condition = "false"
+
+                    print( "    ifnot " + command[1] + ": " + condition );
+                    do_output = condition != "true";
+
+            elif command[0] == "endif":
+                do_output = True;
+
+            else:
+                print( "    ignoring command '" + command[0] + "' at " + inputName + ":" + str( lineNum ))
+
+            if do_output:
                 output.write( tail )
-        else:
-            output.write( line )
 
+        elif do_output:
+            output.write( line )
 
         line = inputFile.readline( )
         lineNum += 1
