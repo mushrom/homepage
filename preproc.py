@@ -2,95 +2,104 @@
 import sys
 import re
 
-defaultVars = { 
-        'templater_version': 'Sprocket v0.1'
+default_vars = {
+        'templater_version': 'preproc thing'
 }
 
-fileCommands = {
-        "css"  : [ "/*:",   "*/"  ],
-        "html" : [ "<!--:", "-->" ],
+file_commands = {
+        "css"  : ("/*:",   "*/"),
+        "html" : ("<!--:", "-->"),
 }
 
-def parseFile( inputName, output, variables ):
-    fileExt = inputName[ inputName.rindex( "." ) + 1 :]
+command_handlers = { }
 
-    if fileExt in fileCommands:
+do_output = True
+
+def preproc_command(func):
+    command_handlers.update({ func.__name__[4:] : func })
+    return func
+
+@preproc_command
+def pre_include( command, output, variables ):
+    print( "    Including " + ", ".join( command[1:] ))
+    for include in command[1:]:
+        parse_file( include, output, variables )
+
+@preproc_command
+def pre_variable( command, output, variables ):
+    for var in command[1:]:
+        if var in variables:
+            print( "    Variable " + var )
+            output.write( variables[var] )
+
+@preproc_command
+def pre_set( command, output, variables ):
+    variables.update({ command[1] : " ".join( command[2:] )})
+    print( "    Set variable " + command[1] + " to " + variables[ command[1] ] )
+
+@preproc_command
+def pre_if( command, output, variables ):
+    global do_output
+
+    condition = variables.get(command[1]) or "false"
+    do_output = condition == "true";
+
+    print( "    if " + command[1] + ": " + condition );
+
+@preproc_command
+def pre_ifnot( command, output, variables ):
+    global do_output
+
+    condition = variables.get(command[1]) or "false"
+    do_output = condition != "true";
+
+    print( "    ifnot " + command[1] + ": " + condition );
+
+def parse_file( input_name, output, variables ):
+    global do_output
+
+    extension = input_name[ input_name.rindex( "." ) + 1 :]
+    preprocess = False
+
+    if extension in file_commands:
+        cmd_start, cmd_end = file_commands[extension]
         preprocess = True
-        cmdStr = fileCommands[fileExt][0];
-        cmdStrEnd = fileCommands[fileExt][1];
-    else:
-        preprocess = False
 
-    inputFile = open( inputName, "r" )
+    input_file = open( input_name, "r" )
 
-    lineNum = 1
-    line = inputFile.readline( )
-    do_output = True;
+    line_num = 1
+    line = input_file.readline( )
 
     while line != '':
-        if preprocess and cmdStr in line and cmdStrEnd in line:
+        if preprocess and cmd_start in line and cmd_end in line:
             # find the placement of preprocessor directives
-            cmdStart = line.index( cmdStr ) + len( cmdStr )
-            cmdEnd = line.index( cmdStrEnd )
+            line_start = line.index(cmd_start) + len(cmd_start)
+            line_end   = line.index(cmd_end)
 
             # Keep track of the text before and after the commands
-            head = line[:cmdStart - len( cmdStr )]
-            tail = line[cmdEnd + len( cmdStrEnd ):]
+            head = line[:line_start - len(cmd_start)]
+            tail = line[line_end + len(cmd_end):]
 
             # extract command
-            line = line[ cmdStart : cmdEnd ]
-            command = line.split( )
+            command = line[line_start : line_end].split()
 
             if do_output:
                 output.write( head )
 
             # evaluate the command
-            if len( command ) < 1:
-                print( "    Warning: empty command tag at " + inputName + ":" + str( lineNum ))
+            if len(command) == 0:
+                print( "    Warning: empty command tag at "
+                       + input_name + ":" + str( line_num ))
 
-            elif do_output:
-                if   command[0] == "include" and len( command ) > 1:
-                    print( "    Including " + ", ".join( command[1:] ))
-                    for include in command[1:]:
-                        parseFile( include, output, variables )
-
-                elif command[0] == "variable" and len( command ) > 1:
-                    for var in command[1:]:
-                        if var in variables:
-                            print( "    Variable " + var )
-                            output.write( variables[var] )
-
-                elif command[0] == "set" and len( command ) > 2:
-                    variables.update({ command[1] : " ".join( command[2:] )})
-                    print( "    Set variable " + command[1] + " to " + variables[ command[1] ] )
-
-                elif command[0] == "if"  and len( command ) == 2:
-                    condition = ""
-
-                    if command[1] in variables:
-                        condition = variables[command[1]]
-                    else:
-                        condition = "false"
-
-                    print( "    if " + command[1] + ": " + condition );
-                    do_output = condition == "true";
-
-                elif command[0] == "ifnot" and len( command ) == 2:
-                    condition = ""
-
-                    if command[1] in variables:
-                        condition = variables[command[1]]
-                    else:
-                        condition = "false"
-
-                    print( "    ifnot " + command[1] + ": " + condition );
-                    do_output = condition != "true";
+            elif do_output and command[0] in command_handlers:
+                command_handlers[command[0]]( command, output, variables )
 
             elif command[0] == "endif":
                 do_output = True;
 
             else:
-                print( "    ignoring command '" + command[0] + "' at " + inputName + ":" + str( lineNum ))
+                print( "    ignoring command '" + command[0] +
+                       "' at " + input_name + ":" + str( line_num ))
 
             if do_output:
                 output.write( tail )
@@ -98,20 +107,17 @@ def parseFile( inputName, output, variables ):
         elif do_output:
             output.write( line )
 
-        line = inputFile.readline( )
-        lineNum += 1
+        line = input_file.readline( )
+        line_num += 1
 
-    return
-
-def parseTemplate( inputName, outputName ):
-    outputFile = open( outputName, "w" )
-
-    parseFile( inputName, outputFile, defaultVars );
-    return
+def parse_template( input_name, output_name ):
+    output_file = open( output_name, "w" )
+    parse_file( input_name, output_file, default_vars );
+    output_file.close()
 
 if __name__ == "__main__":
     if len( sys.argv ) < 3:
         print( "Usage: " + sys.argv[0] + " [input template] [output file]" )
 
     else:
-        parseTemplate( sys.argv[1], sys.argv[2] )
+        parse_template( sys.argv[1], sys.argv[2] )
