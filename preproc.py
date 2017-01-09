@@ -11,62 +11,6 @@ fileCommands = {
         "html" : [ "<!--:", "-->" ],
 }
 
-highlightCommands = {
-        "c"    : { "keywords"  : [ "while", "if", "else", "inline", "void", "typedef",
-                                   "for", "do", "int", "char", "unsigned", "enum", "return",
-                                   "struct", "volatile", "switch", "case", "default" ],
-                   "macros"    : [ "#define", "#include", "#ifndef", "#ifdef", "#if", "#endif" ],
-                   "function"  :   "\\b[a-zA-Z_][a-zA-Z0-9_]+\\(",
-                   "comments"  : ["/\\*.*?\\*/", "//.*?\n" ],
-                   #"comments"  : [ "//.*?\n" ],
-                   "constants" : [ "\\b[0-9]\\b", "&quot;.*?&quot;", "&lt;.*\\.h&gt;", "\\b[A-Z_][A-Z_]*\\b" ]
-                 }
-}
-
-def highlightFile( inputName, output ):
-    fileExt = inputName[ inputName.rindex( "." ) + 1 :]
-
-    if fileExt in highlightCommands:
-        highlight = True
-        langdict = highlightCommands[fileExt]
-    else:
-        highlight = False
-
-    inputFile = open( inputName, "r" );
-    fbuf = inputFile.read( );
-
-    fbuf = fbuf.replace( "&", "&amp;" )\
-               .replace( "<", "&lt;" )\
-               .replace( ">", "&gt;" )\
-               .replace( "\"", "&quot;" )\
-               .replace( "\t", "     " )
-
-    if highlight:
-        print( "have highlight file" );
-
-        for word in langdict["comments"]:
-            fbuf = re.sub( "("+word+")", "<span style='color:#b0b0b0; font-style:italic;'>\\1</span>", fbuf, 0, re.DOTALL )
-
-        temp = re.findall( langdict["function"], fbuf )
-        for thing in temp:
-            foo = thing[:-1]
-            fbuf = re.sub( "(\\b"+foo+"\\b)\\(", "<span style='color:#2e3a7a'>\\1</span>(", fbuf )
-
-        for word in langdict["keywords"]:
-            fbuf = re.sub( "(\\b" + word + "\\b)", "<span style='color:#3e8f3e'>\\1</span>", fbuf )
-
-        for word in langdict["macros"]:
-            fbuf = fbuf.replace( word, "<span style='color:#6f6fba'>" + word + "</span>" )
-
-        for word in langdict["constants"]:
-            fbuf = re.sub( "("+word+")", "<span style='color:#bf4444'>\\1</span>", fbuf )
-
-        output.write( fbuf );
-    else:
-        output.write( fbuf );
-
-    return
-
 def parseFile( inputName, output, variables ):
     fileExt = inputName[ inputName.rindex( "." ) + 1 :]
 
@@ -76,9 +20,6 @@ def parseFile( inputName, output, variables ):
         cmdStrEnd = fileCommands[fileExt][1];
     else:
         preprocess = False
-        #print( "    Warning: Unknown preprocessor file extension \"" + fileExt + "\" ("+ inputName + "), including raw" )
-        return highlightFile( inputName, output );
-
 
     inputFile = open( inputName, "r" )
 
