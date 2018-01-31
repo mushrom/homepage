@@ -14,6 +14,77 @@
 
         <div class="box">
             <div class="sec_title">
+                <b>C4 OS</b>
+            </div>
+
+            <p>
+            <div class="project_box">
+                <div class="project_info">
+                    <a href="data/c4.png">
+                        <img src="data/c4-small.png" />
+                    </a>
+
+                    <br />
+                </div>
+
+                <div class="project_details">
+                    Based on an L4-like microkernel, with an emphasis on
+                    portability and flexibility.
+                    <br />
+                    <br />
+
+                    The successor to Helix OS, a full microkernel system with
+                    a capability-based syscall API exposed to userland. Despite
+                    being largely
+                    unoptimized, IPC overhead is only about 1000 cycles per
+                    message.
+
+                    Currently supports:
+
+                    <ul>
+                        <li>ext2 file systems</li>
+                        <li>VESA framebuffers, as provided by the bootloader</li>
+                        <li>IDE hard drives</li>
+                        <li>PS/2 keyboards</li>
+                        <li>A useful standard library and libc</li>
+                        <li>Entirely userland drivers</li>
+                        <li>(Soon) SMP</li>
+                    </ul>
+                    <br / >
+                    <hr />
+                    <a href="https://github.com/c4-os/c4-os">View on github</a>
+                    
+                </div>
+            </div>
+            </p>
+        </div>
+
+        <div class="box">
+            <div class="sec_title">
+                <b>Nscheme</b>
+            </div>
+
+            <div class="project_box">
+                <div class="project_info">
+                    <a href="data/nscheme.png">
+                        <img src="data/nscheme-small.png" />
+                    </a>
+                    <br />
+                </div>
+
+                <p>
+                <div class="project_details">
+                The successor to gojira, a fast, flexible r7rs scheme which does JIT compilation to subroutine-threaded code. Designed to be very thread-friendly in anticipation of building an erlang-like distributed platform library on top of it.
+
+                <hr />
+                <a href="https://github.com/mushrom/nscheme">View on github</a>
+                </div>
+                </p>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="sec_title">
                 <b>Helix OS</b>
             </div>
 
@@ -28,12 +99,14 @@
                 </div>
 
                 <div class="project_details">
-                    A modular, lightweight unix-like operating system, targetting x86.
+                    A modular unix-like operating system targeting x86.
                     <br />
                     <br />
-                    I'm aiming for it to be a highly modular kernel, with a defined
-                    module hierarchy that helps enforce seperation of concerns without
-                    being a full microkernel.
+                    Abandoned at this point in favor of C4-OS. This has
+                    some neat things though, particularly an in-kernel dynamic
+                    linker for loading modules, the ability to load programs
+                    from the filesystem, and basic framebuffer support with
+                    a userland display manager.
                     <br / >
                     <hr />
                     <a href="https://github.com/Helix-OS/helix-os">View on github</a>
@@ -59,7 +132,9 @@
                 </div>
 
                 <div class="project_details">
-                    A scheme-like lisp interpreter
+                    A scheme-like lisp interpreter with some concepts from
+                    clojure and common lisp mixed in.  <br />
+                    Mostly abandoned at this point in favor of nscheme.
                     <br / >
                     <hr />
                     <a href="https://github.com/mushrom/gojira">View on github</a>
@@ -74,7 +149,9 @@
             </div>
 
             <p>
+            <div class="project_details">
             A UART serial library for debugging on Atmel attiny*5 microcontrollers
+            </div>
             </p>
         </div>
 
@@ -84,7 +161,9 @@
             </div>
 
             <p>
+            <div class="project_details">
             R7RS scheme compiler, written in Gojira lisp
+            </div>
             </p>
         </div>
 
