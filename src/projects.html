@@ -28,28 +28,32 @@
                 </div>
 
                 <div class="project_details">
-                    Based on an L4-like microkernel, with an emphasis on
-                    portability and flexibility.
+                    A practical full microkernel-based system, with an emphasis
+                    on portability and flexibility.
                     <br />
                     <br />
 
-                    The successor to Helix OS, a full microkernel system with
-                    a capability-based syscall API exposed to userland. Despite
-                    being largely
-                    unoptimized, IPC overhead is only about 1000 cycles per
-                    message.
+                    The successor to Helix OS, this is based on the C4
+                    microkernel, an L4-like kernel. The userland syscall API is
+                    capability-oriented, heavily inspired by seL4.
+                    And, despite being large unoptimized, IPC overhead is only
+                    about 1000 cycles per message.
 
-                    Currently supports:
+                    Currently has:
 
                     <ul>
+                        <li>A compositing display manager</li>
+                        <li>Entirely userland drivers</li>
+                        <li>PS/2 keyboards and mice</li>
                         <li>ext2 file systems</li>
                         <li>VESA framebuffers, as provided by the bootloader</li>
                         <li>IDE hard drives</li>
-                        <li>PS/2 keyboards</li>
                         <li>A useful standard library and libc</li>
-                        <li>Entirely userland drivers</li>
                         <li>(Soon) SMP</li>
                     </ul>
+
+                    And it runs on real hardware!
+
                     <br / >
                     <hr />
                     <a href="https://github.com/c4-os/c4-os">View on github</a>
