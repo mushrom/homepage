@@ -1,0 +1,171 @@
+<!--: set blog_title Game Engine Progress: Week 1 -->
+<!--: set blog_date Wed 29 Jan 2020 03:18:33 PM EST -->
+<!-- XXX: figure out way to store post file name in variable -->
+<!--: set blog_num   3 -->
+<!--: include src/lib/blog_struct.html -->
+
+<p>
+After excitedly spamming a few (very understanding (mostly indifferent)) channels
+with my progress on writing a 3D game engine from scratch, I decided that this
+would be a good time to move my blog to a more proper place. So, here's
+a digest of the progress I've made after about a week of working on
+<a href="https://github.com/mushrom/grend">the engine</a>, complete
+with neat videos. The engine is written in C++, using openGL as the graphics
+backend and SDL2 for input and window management.
+</p>
+
+<!--: ifnot post_summary -->
+<h2>Day 0</h2>
+<video controls>
+    <source src="data/3d-vids/vid-1.webm">
+    <p>Video 1 here, otherwise get it 
+        <a href="data/3d-vids/vid-1.webm">
+            here
+        </a>
+    </p>
+</video>
+<div class="video_description">Spinning Cuboid</div>
+
+<p>
+I started out by following the excellent <a href="https://en.wikibooks.org/wiki/OpenGL_Programming">tutorial on wikibooks.</a> This was a good
+introduction, I would recommend it if you're looking to start programming with
+OpenGL too. Getting the first triangles on screen was 
+surprisingly satisfying. This first video follows the tutorial pretty closely,
+with the vertex shader passing a per-vertex color attribute to the fragment
+shader. It's an interesting visualization of how the fragment shader
+interpolates between the colors passed from the vertex shader.
+</p>
+
+<h2>Diffuse lighting and textures</h2>
+<video controls>
+    <source src="data/3d-vids/vid-2.webm">
+</video>
+<div class="video_description">Spinning Cuboid++</div>
+
+<p>This video shows some progress after following the tutorials on texturing
+and diffuse lighting. This already looks pretty neat in my humble opinion,
+reminds me of old video games. Not coincidence, of course,
+the simple geometry, per-vertex lighting and (lack of) texture filtering are
+similar to what could be done in early 3D games.
+
+<p>
+Here I started to experiment a bit by drawing multiple objects.
+This was pretty simple actually, at least a naive implementation. The code
+binds an MVP matrix (model, view, projection) to the shader before
+calling <code>glDrawElements()</code> to draw vertices by index. So, what if
+we just update the &quot;M&quot; in there, and repeat
+<code>glDrawElements()</code> for each object we want to draw? And this works,
+but it's not terribly efficient as you increase the number of objects.
+That being said, at the time of writing it runs fine on my netbook from 2009
+with an atom n270, so it's probably not worth worrying about just yet.
+</p>
+
+<h2>Multiple lights and fancy camera movement</h2>
+<video controls>
+    <source src="data/3d-vids/vid-3.webm">
+</video>
+<div class="video_description">Spinning Cuboid#</div>
+
+<h2>Model loading and specular highlights</h2>
+<video controls>
+    <source src="data/3d-vids/vid-4.webm">
+</video>
+<div class="video_description">Also mipmapping</div>
+
+<p>
+After dutifully copying the specular highlight shader code, I worked on loading
+multiple textures and <code>.obj</code> models. It was nice to see some geometry
+more complicated than the familiar cuboid, as dear as it was. I was surprised at
+just how simple the <code>.obj</code> file format is, it was pretty painless to
+get working.</p>
+
+<p>
+However, contrary to the simplicity of the <code>.obj</code> format, drawing
+multiple objects with different meshes was more involved than I had expected.
+While with the cuboids I could just bind a new Model matrix and call it a day,
+with multiple meshes you need to set up the proper buffer pointers before
+<code>glDrawElement()</code>. When first approaching this I had thought that
+this meant simply loading each mesh into it's own VBO (Vertex Buffer Object),
+and swapping this out per-mesh. However, this would mean I'd have to re-link
+the shaders every draw call, which is not great (read: absolutely terrible and
+just horrible in general) for performance. Instead, the recommended way to do
+this seems to be to have one VBO for each attribute, loading all of the meshes
+and their attributes into this set of VBOs, and then using a VAO (Vertex
+Array Object) for each mesh to keep track of what buffer pointers should
+pointing where. This way you can simply bind the VAO corresponding to the mesh
+you want to draw and then do a draw call, easy peasy, and pretty quick too.
+</p>
+
+<h2>Materials</h2>
+<video controls>
+    <source src="data/3d-vids/vid-5.webm">
+</video>
+<div class="video_description">Introducing creative commons RPG guy</div>
+
+<p>
+Now that I could load models into this little world, I felt the irresistable
+urge to load as many things into it as I could. I ventured out to the interwebs
+in search of worthy (free) models, and found these neat low-poly
+models on <a href="https://opengameart.org/content/modular-terrain">OpenGameArt
+</a>. The terrain objects came with material description files, which my little
+object loader didn't handle yet. They follow the same format as the object
+files, so adding support for them was straightforward. Now it can handle objects
+with different material properties without touching the engine code at all.
+</p>
+
+<h2>More testing</h2>
+<video controls>
+    <source src="data/3d-vids/vid-6.webm">
+</video>
+<div class="video_description">Normals ain't normal</div>
+
+<p>
+Building out a basic test landscape with these new models, and hmm, something
+isn't right here... The normals don't match where the faces are! This is
+because the little loader had assumed that there would be duplicated vertices
+and normals for each face, which isn't the case here. The simple fix is to just
+duplicate vertices for each face declaration while loading. This increases the
+number of vertices per model significatly (and so memory usage), but for now 
+this works. 
+</p>
+
+<h2>Loading textures and normals</h2>
+<video controls>
+    <source src="data/3d-vids/vid-7.webm">
+</video>
+<div class="video_description">Much better</div>
+
+<p>
+After the fix mentioned above, and also loading textures from material files,
+plus texture coordinates and normals from the object files. This looks fairly
+presentable, maybe a low-poly cartoonish RPG would be a good first game demo...
+</p>
+
+<h2>Map editing, per-pixel lighting</h2>
+<video controls>
+    <source src="data/3d-vids/vid-8.webm">
+</video>
+<div class="video_description">Worst minecraft clone</div>
+
+<p>
+Most recently, I added a simple map editor and save format, and moved the
+lighting to the fragment shader. While the cartoonish low-poly look is pretty
+cool (and I can see why it's so popular among indie games), I want to have more
+realistic lighting and textures as well, so the per-pixel lighting is in
+anticipation for working on normal mapping and shadows. It also loads normal
+and specular maps and passes them to the shader, although the shader doesn't
+do anything with them just yet. The math for normal mapping is a tiny bit over
+my head, so it might take a little while to get that working.
+</p>
+
+<h2>Fin.</h2>
+<p>
+And so that's all for now, stay tuned for updates, and don't forget to like,
+subscribe, follow, leave a comment, enable notifications, share, retweet,
+repost, become a patron, host, raid, cheer, pin, digg, email a link to your
+parents, and print copies to hand to strangers in the hallway.
+</p>
+
+<!--: endif -->
+
+<!--: include src/lib/blog_footer.html -->

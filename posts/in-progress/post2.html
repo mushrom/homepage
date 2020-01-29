@@ -1,0 +1,52 @@
+<!--: set blog_title Tree searches in game-playing AIs -->
+<!--: set blog_date  Wed 14 Aug 2019 07:34:30 AM EDT -->
+<!--: set blog_num   2 -->
+<!--: include src/lib/blog_struct.html -->
+
+<p>
+After the famous AlphaGo vs. Lee Sedol match in 2016, I was introduced to
+the game of go, and developed a real interest in how game-playing AIs work.
+When most people think of AlphaGo, they think of it as proof of the superiority
+of neural networks; however, there's another key (albeit slightly less
+sensational) concept that made AlphaGo so successful: the monte carlo tree
+search.
+</p>
+
+<p>
+Here I'll describe what I've learned so far about game tree searches, and my
+experiments with MCTS in
+<a href="https://github.com/mushrom/go-bot-thing">budgie</a>.
+</p>
+
+<!--: ifnot post_summary -->
+<h2>Tree searches</h2>
+<p>
+The idea of using tree searches to enumerate the value of moves in a game is
+rather old actually, first appearing as
+<a href="https://example.com">minimax</a>.
+</p>
+
+<p>Due to the inefficiency of computing minimax for more complicated games,
+alpha-beta tree searches were invented, apparently multiple times independently.
+Alpha-beta tree searches are based on the observation that if you're only
+looking for the best move, you can ignore sub-trees that are demonstrably known
+to be worse than the best sub-tree you've found so far.</p>
+
+<h2>Monte carlo methods</h2>
+<p>Short intermission: suppose you want to calculate an approximation of pi, but you don't know anything at all.</p>
+
+<h2>Monte carlo tree search</h2>
+<p>So, what happens if we apply this concept to tree searches, so that you'd
+have some sort of probabilistic minimax tree? That's exactly what monte carlo
+tree searches are (surprise!).<p>
+
+<h2>Going further (neural nets?)</h2>
+<p>
+This all raises the question: where do neural networks get involved in
+a MCTS bot such as AlphaGo? Neural nets are used as weights in the tree and
+playout policies when searching.
+</p>
+
+<!--: endif -->
+
+<!--: include src/lib/blog_footer.html -->
