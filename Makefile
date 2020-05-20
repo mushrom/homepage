@@ -9,6 +9,8 @@ PREFIX = /var/www
 .PHONY: all
 all: directories $(OUTPUT)
 
+out/blog.html: $(POSTS)
+
 out/%.html: src/%.html
 	@echo "[ ] Generating $< -> $@"
 	@./preproc.py "$<" "$@"

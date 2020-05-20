@@ -1,0 +1,185 @@
+<!--: set blog_title Game Engine Progress: Month 4 -->
+<!--: set blog_date Wed 20 May 2020 07:34:09 PM EDT -->
+<!-- XXX: figure out way to store post file name in variable -->
+<!--: set blog_num   4 -->
+<!--: include src/lib/blog_struct.html -->
+
+<p>
+So quite a lot has happened since my previous post. A 100-year plague has
+ravaged the earth, the markets have collapsed world-wide, and a new Doom has
+been released.  In the midst of the ongoing apocalypse I happened to make
+some substantial improvements to
+<a href="https://github.com/mushrom/grend">my engine</a>:
+</p>
+
+<ul>
+    <li>Loading models and scenes from glTF
+    <li>Metal-roughness physically-based rendering (yeah!)
+    <li>Physically-correct light attenuation
+    <li>Dynamic resolution scaling
+    <li>Postprocessing, tonemapping
+    <li>Normal mapping (still kinda broken)
+    <li>Skybox with material-dependent environment-mapped reflections
+    <li>A stub implementation of physics with octrees for collision
+    <li>WebGL support with emscripten
+    <li>A real GUI using Dear ImGUI
+    <li>Work on a HRTF implementation for 3D positional sound
+    <li>And other things here and there
+</ul>
+
+<p>(Spoiler: it doesn't run on my atom n270 anymore :/)</p>
+
+<!--: ifnot post_summary -->
+<h2>State of the Engine</h2>
+<a href="data/post4-data/imgui-screenie.png">
+    <img src="data/post4-data/imgui-screenie.png"/>
+</a>
+<p>
+This screenshot sums things up pretty nicely, you can see here PBR models and
+different dynamic light types, editing object variables with ImGui, seperate
+camera objects, tonemapping... Definitely a big change from the last post. The
+normal mapping is still a bit broken, something with the tangent generation I
+haven't quite figured out yet, but eh, close enough for now. At the moment
+I'm trying to get things to a state where I can start developing the actual
+game soon, so bugs like this aren't too important just yet.
+</p>
+
+<p>
+As far as ImGui goes, it was really easy to get it working, and the programming
+model is great, I would highly recommend. If only all GUI programming could
+be so simple...
+</p>
+
+<h2>WebGL demo</h2>
+<a href="data/post4-data/webglscreen.png">
+    <img src="data/post4-data/webglscreen.png"/>
+</a>
+<div class="video_description">
+    <a href="data/post4-data/webgl/grend-webgl.html">Live here</a>
+</div>
+<div class="video_description">(note: the physics are very broken)</div>
+
+<p>
+Last weekend I had decided to try out emscripten, and managed to get a fairly
+usable port for webgl up and running. It was a bit challenging, and required
+a major overhaul to the shader framework I had set up, but overall it
+went pretty smoothly. One major problem so far is that webgl doesn't support
+format conversion when specifying textures. Albedo textures are encoded in sRGB
+space, so without converting to linear color space on texture upload
+the albedo texture is converted to sRGB space again after gamma correction,
+which makes it way too bright. Gamma correction is necessary for good lighting,
+so I'll have to either keep a seperate set of albedo textures encoded in linear
+space, or do the sRGB-&gt;linear conversion myself before uploading. Also, the
+skybox breaks for some reason when switching to editor mode...
+</p>
+
+<p>A quick summary of the controls:</p>
+<pre>
+    General:
+      w, a, s, d, q, e - forward, left, back, right, up, down, respectively
+      m                - toggle editor mode
+
+    Player mode:
+      click  - spawn a physics ball
+      space  - add to the upwards acceleration
+      escape - quit
+
+    Editor mode:
+      middle click - pan camera
+      click        - place, select something
+      i            - load save map
+</pre>
+
+<h2>HRTF for audio</h2>
+<audio controls>
+    <source src="data/post4-data/lawyer.ogg">
+</audio>
+<div class="video_description">Song: Gojira - Satan is a Lawyer</div>
+<div class="video_description">
+    (Should sound like it's going clockwise around your head)
+</div>
+
+<p>
+Naturally, immersive audio is an important part of a good game, and I'm already
+making my own engine so why not roll my own 3D sound thing too.
+I've been working on this alone for a solid two weeks, tuning it has been a
+huge timesink, but I'm fairly happy with how it's turned out so far.
+</p>
+
+<p>
+As far as the implemention goes, it's pretty simple:
+It keeps a circular buffer of samples from the mono input, and uses some trig
+to determine what sample should be output for each ear given the speed of sound
+and the position of the audio around the head, also accounting for phase shift,
+then applies a low-pass filter depending on the position.
+It does this twice, once for the main sound and for the reverb around the head,
+and sums the results.
+Not too shabby, has a lot of tunable parameters and isn't too expensive to
+compute.
+</p>
+
+<p>
+This isn't merged in yet, but should be pretty soon.
+</p>
+
+<h2>PBR with a glTF helmet </h2>
+<a href="data/post4-data/pbr.png">
+    <img src="data/post4-data/pbr.png"/>
+</a>
+<p>
+A screenshot from april, after implementing the BRDF function from
+the <a href="https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#appendix-b-brdf-implementation">glTF implementation notes</a>. Looks
+pretty good!
+</p>
+
+<h2>Rendering order</h2>
+<video controls>
+    <source src="data/post4-data/fronttoback.webm">
+</video>
+<p>
+This shows front-to-back ordering of draw calls relative to the camera.
+Not very impressive on its own (although it does improve performance), but
+this sets up the skeleton for fancier occlusion culling.
+</p>
+
+<h2>Octree</h2>
+<a href="data/post4-data/octree.png">
+    <img src="data/post4-data/octree.png"/>
+</a>
+<p>
+Finally a debug view of octree generation, just because it's neat.
+</p>
+
+<h2>To be continued</h2>
+<p>
+Next things to do:
+</p>
+<ul>
+    <li>Animations
+    <li>Shadow maps, actual environment-mapped reflections
+    <li>Light probes for global illumination
+    <li>Clustered forward renderering
+    <li>portal+PVS generation for occlusion culling
+    <li>The actual game ;)
+</ul>
+
+<h2>Cool links to clicken and share</h2>
+<ul>
+    <li><a href="https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#appendix-b-brdf-implementation">A BRDF implementation</a>
+    <li><a href="https://imdoingitwrong.wordpress.com/2011/01/31/light-attenuation/">Better light attenuation</a>
+    <li><a href="https://www.youtube.com/watch?v=KBQ34olRXhY">
+        Old lecture on antialiasing
+        </a>
+    <li><a href="http://advances.realtimerendering.com/s2016/Siggraph2016_idTech6.pdf">Doom 2016 siggraph presentation</a>
+    <li><a href="http://www.cse.chalmers.se/~uffe/clustered_shading_preprint.pdf"> Paper on clustered shading</a>
+    <li><a href="https://web.archive.org/web/20180111010801/http://www.thomasdiewald.com/blog/?p=1488">Comparison of octree vs. BVH for space partitioning</a>
+    <li><a href="https://entropymine.com/imageworsener/srgbformula/">A close look at the sRGB formula</a>
+    <li><a href="https://github.com/syoyo/tinygltf">The tinygltf library</a>
+    <li><a href="http://filmicworlds.com/blog/filmic-tonemapping-operators/">Filmic tonemapping overators</a>
+    <li><a href="https://renderdoc.org/">RenderDoc for debugging</a>
+</ul>
+
+
+<!--: endif -->
+
+<!--: include src/lib/blog_footer.html -->

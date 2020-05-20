@@ -66,6 +66,11 @@ body {
     padding-top: 10px;
 }
 
+.box ul {
+    margin-left: 5%;
+    padding-top: 10px;
+}
+
 .code_sample {
     margin-left: 5%;
     padding-left: 15px;
@@ -109,10 +114,10 @@ body {
     border-bottom: 1px dotted lightgrey;
 }
 
-.blog video {
+.blog video, img, audio {
     margin-left: auto;
     margin-right: auto;
-    max-width: 640px;
+    max-width: 720px;
     display: block;
     padding: 5px;
     border: 1px dotted grey;
