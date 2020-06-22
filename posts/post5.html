@@ -1,0 +1,82 @@
+<!--: set blog_title Game Engine Progress: Lurking in the Shadows-->
+<!--: set blog_date Wed 20 May 2020 07:34:09 PM EDT -->
+<!-- XXX: figure out way to store post file name in variable -->
+<!--: set blog_num   5 -->
+<!--: include src/lib/blog_struct.html -->
+
+<p>
+More engine development stuff! This month has been a bit slow in terms of
+new features, as I've been busy trying to figure out what the h*ck to do for
+the fall semester. Alas... The most notable addition is dynamic shadow and
+reflection maps, done using a texture atlas cache sort of thing similar to
+Doom 2016. Otherwise, I've spent time doing desperately needed housekeeping
+and bug fixes, and some small quality of life improvements.
+</p>
+
+<p>Without further ado, here's some pictures:</p>
+
+<!--: ifnot post_summary -->
+<a href="data/post5-data/sponza-highlight2-6-11.png">
+    <img src="data/post5-data/sponza-highlight2-6-11.png"/>
+</a>
+<div class="video_description">
+    Money shot
+</div>
+
+<p>
+Multiple point lights with their own shadow cube maps. Note that the
+shadow maps are unfiltered, resulting in rough jagged edges farther away
+from the light, I still need to implement PCF to fix that.
+</p>
+
+<a href="data/post5-data/sponza-highlight-6-11.png">
+    <img src="data/post5-data/sponza-highlight-6-11.png"/>
+</a>
+<div class="video_description">
+    Closer
+</div>
+
+<h2>Atlases</h2>
+<a href="data/post5-data/shadows-sponza-6-09.png">
+    <img src="data/post5-data/shadows-sponza-6-09.png"/>
+</a>
+<div class="video_description">
+    3 points lights and a reflection probe
+</div>
+
+<p>
+Pictured above is sponza with 3 point lights visible (there's 5 in the scene),
+all casting shadows. Looking at the atlas textures:
+</p>
+
+<a href="data/post5-data/shadow-atlas-6-03.png">
+    <img src="data/post5-data/shadow-atlas-6-03.png"/>
+</a>
+<div class="video_description">
+    Shadow atlas (depth maps)
+</div>
+
+<a href="data/post5-data/reflection-atlas-6-03.png">
+    <img src="data/post5-data/reflection-atlas-6-03.png"/>
+</a>
+<div class="video_description">
+    Reflection atlas for the scene (there's only one probe)
+</div>
+
+<p>
+While these are all rendered at the same size, the atlas is managed with
+a quadtree that can handle power-of-two sizes up to size/2, so that allows
+the possibility of doing LOD'ing of shadows and reflections, and cascading
+shadow maps.
+</p>
+
+<h2>Fin.</h2>
+<p>
+So yup, that's all for now, stay tuned for more stuff in the future. I'll
+probably take a break from engine development for a bit and revisit
+language development again, so it may be a while before I add new stuff
+to the engine.
+
+<!--: endif -->
+
+<!--: include src/lib/blog_footer.html -->
