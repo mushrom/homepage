@@ -1,0 +1,90 @@
+<!--: set blog_title Ludum Dare 47: How'd it go? -->
+<!--: set blog_date  Fri Sep 23 22:11:44 EST 2016 -->
+<!--: set blog_num   6 -->
+<!--: include src/lib/blog_struct.html -->
+
+<p>
+I participated in the Ludum Dare game jam for the first time last weekend,
+putting my engine to the test, and came out with a not-too-shabby game. It was
+a ton of fun, I've lurked around Ludum Dare for a while, playing games from it occasionally, but it's a very different (much more interesting) experience
+when you're participating. Many coffees were drunk, many a cool person were
+met, a good break from the eternal lockdown tedium... Overall just a good time.
+</p>
+
+<img src="data/post6-data/gamui.png" />
+
+<p>
+So what did I end up making, you ask? The theme for this jam was
+"Stuck in a Loop." I decided on a space-age FPS set in a
+<a href="https://en.wikipedia.org/wiki/File:Nautilus-X_ISS_demo_1.png">
+    "loop" ship</a>,
+since I already had a first-person camera controller implemented and
+everything. The Ludum Dare page for it is
+<a href="https://ldjam.com/events/ludum-dare/47/space-marine-2020">here</a>,
+and the webgl build of the game is
+<a href="http://lisp.us.to/data/sm2020/testthing.html">live here</a>,
+if you're inclined to try it out. Objectively speaking, it's not very good;
+things are broken all over the place, assets are all sorts of jank, but:
+it does represent a real, playable game with animations, sound, and UI, and so
+it's a big step for my little engine. Where it's at now is basically the minimum
+viable engine.
+</p>
+
+<!--: ifnot post_summary -->
+<p>There are a few things I wanted to put in that didn't make the deadline,
+particularly midway through I decided that it should be a <i>third</i> person
+shooter to show off some skinned and animated models. I had made a full, rigged
+low-poly model, made some animations, and then realized I probably wouldn't be
+able to finish that, the 3rd-person view logic, and get everything built for
+webgl in the ~6-ish hours before the end of the jam. Alas... Something to plan
+for better next time I suppose, would be a good thing to have some more
+pre-made view controllers around.
+</p>
+
+<p>In a similar vein, I had started off by making my own textures, but ended up
+using a few things I had made before the jam, which disqualified me from
+being judged on graphics... In retrospect, maybe I should have leaned into that
+and used more premade textures and assets. I'm basically making a demo for my
+engine, after all, and I'm not a very good artist ;)</p>
+
+<p>Another thing to note is from the feedback I got on the game, it seems a lot
+of people are actually using lower spec'd machines than my own. This is something
+I didn't expect honestly, my aging potato was low-end when I built it in 2015,
+but I suppose many people are playing on laptops... Definitely something
+to keep in mind in the future. While the webgl pushed the limits of playability
+for me, it's basically unplayable on anything less, which means I'll need to
+consider having different graphics settings and providing native builds.</p>
+
+<p>Regarding the engine, I spent the month or two leading up to the jam
+cramming things in. New features the engine has:</p>
+
+<ul>
+    <li>Node-based object trees, json-based map format
+    <li>Basic framework for asset streaming, everything is now reference counted
+    <li>Animations, skinned meshes
+    <li>Sound mixing, HRTF implementation merged in
+    <li>Vector graphics UI with nanovg
+    <li>Structured like a proper library now, allowing for out-of-tree builds
+    <li>Proper input handling layer, allowing for reusable controllers, simpler
+        state management
+    <li>Configure script for setting install locations, openGL target, etc.
+</ul>
+
+<p>Much more capable than it was in June, I'd say! There are, of course, still
+a few very limiting factors, notably no sort of light clustering, and no
+geometry culling. I started to run out of time leading up to the jam, and so
+had to prioritize user-facing features, but these two things really limited the
+complexity of the scenes I could make.</p>
+
+<p>
+So, naturally that's what I'll be working on next. The roadmap from there is
+to integrate bullet physics, work on asset streaming, and work more lighting and
+postprocessing stuff (light/reflection probes, SSR, antialiasing,
+<i>maybe</i> path tracing if I'm feeling
+particularly ambitious). Honestly not sure how far I want to go with the engine,
+but I'm enjoying working on it, so no reason to stop now.
+</p>
+
+<!--: endif -->
+
+<!--: include src/lib/blog_footer.html -->
