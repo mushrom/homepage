@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
+# XXX: I know this is terrible python, I wrote this years ago and have been
+#      occasionally slapping new trash on the pile, need to rewrite
 import sys
 import re
+import pygments
+import pygments.lexers
+import pygments.formatters
 
 default_vars = {
         'templater_version': 'preproc thing'
@@ -12,11 +17,19 @@ file_commands = {
 }
 
 command_handlers = { }
+unprinted_handlers = { }
 
 do_output = True
+# string buffer holding unprinted lines
+# TODO: wrap this all in a class
+unprinted = []
 
 def preproc_command(func):
     command_handlers.update({ func.__name__[4:] : func })
+    return func
+
+def handles_unprinted(func):
+    unprinted_handlers.update({ func.__name__[4:] : func })
     return func
 
 @preproc_command
@@ -55,8 +68,47 @@ def pre_ifnot( command, output, variables ):
 
     print( "    ifnot " + command[1] + ": " + condition );
 
+highlight_lexer = None
+highlight_mode = False
+@preproc_command
+def pre_highlight(command, output, variables):
+    global do_output
+    global highlight_mode
+    global highlight_lexer
+
+    highlight_lexer = command[1] or "python"
+    do_output = False;
+    highlight_mode = True;
+
+    print("    highlight " + highlight_lexer);
+
+@handles_unprinted
+@preproc_command
+def pre_endhighlight(command, output, variables):
+    global do_output
+    global highlight_mode
+    global unprinted
+
+    if not highlight_mode:
+        return
+
+    style = variables.get("pygments-style") or "tango"
+    lexer = pygments.lexers.get_lexer_by_name(highlight_lexer)
+    formatter = pygments.formatters.HtmlFormatter(noclasses=True, style=style)
+    code = "".join(unprinted).replace("\t", "   ");
+    result = pygments.highlight(code, lexer, formatter)
+
+    output.write(result)
+
+    do_output = True
+    highlight_mode = False
+    unprinted = []
+
+    print("    endhighlight, style = ", style);
+
 def parse_file( input_name, output, variables ):
     global do_output
+    global unprinted
 
     extension = input_name[ input_name.rindex( "." ) + 1 :]
     preprocess = False
@@ -91,7 +143,7 @@ def parse_file( input_name, output, variables ):
                 print( "    Warning: empty command tag at "
                        + input_name + ":" + str( line_num ))
 
-            elif do_output and command[0] in command_handlers:
+            elif command[0] in command_handlers and (do_output or command[0] in unprinted_handlers):
                 command_handlers[command[0]]( command, output, variables )
 
             elif command[0] == "endif":
@@ -106,6 +158,9 @@ def parse_file( input_name, output, variables ):
 
         elif do_output:
             output.write( line )
+
+        else:
+            unprinted += [line]
 
         line = input_file.readline( )
         line_num += 1

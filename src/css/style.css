@@ -9,6 +9,11 @@ body {
     line-height: 1.5;
 }
 
+code {
+    background-color: #e0e0e0;
+    font: 16px monospace;
+}
+
 .header {
 }
 
@@ -63,7 +68,7 @@ body {
 
 .box p {
     margin-left: 5%;
-    padding-top: 10px;
+    text-indent: 1.33em;
 }
 
 .box ul {
@@ -75,6 +80,9 @@ body {
     margin-left: 5%;
     padding-left: 15px;
     border-left: 3px solid #c0d0c0;
+    overflow: scroll;
+    overflow-y: auto;
+    overflow-x: auto;
 }
 
 .project_box {
@@ -117,6 +125,7 @@ body {
 .blog video, img, audio {
     margin-left: auto;
     margin-right: auto;
+    width: 95%;
     max-width: 720px;
     display: block;
     padding: 5px;

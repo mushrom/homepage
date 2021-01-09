@@ -1,0 +1,231 @@
+<!--: set blog_title The Grend quarterly report -->
+<!--: set blog_date Sat Jan  9 05:40:31 PM EST 2021 -->
+<!--: set blog_num   7 -->
+<!--: include src/lib/blog_struct.html -->
+
+<p>
+Hello again, dear blog. New year, new me, new engine stuff, new games,
+new president. Lots of new stuff, yessir. I'm pleased to announce that
+every major milestone in the previous post was reached. Yup, that's right,
+we now have:
+</p>
+
+<ul>
+    <li>Camera frustum culling, for geometry, lights, and particles
+    <li>Tiled lighting, with full clustered lighting in the works
+    <li>Using UBOs in OpenGL 3.1+
+    <li>Bullet physics integration
+    <li>An ECS-ish layer for game logic
+    <li>Irradiance (GI) probes (very naive implementation)
+    <li>Parallax-corrected cubemaps, with (half-implemented) specular convolution
+    <li>An asyncronous job queue
+    <li>Instanced geometry, particles
+    <li>Dynamic mesh generation
+    <li>More built-in input controllers (for the camera)
+    <li>Slight FXAA-like antialiasing (mostly for removing specular artifacts)
+    <li>More glTF stuff, punctual lights extension
+</ul>
+
+<p>
+And other small fixes here and there. The engine is really starting to take
+shape, looking like something you might plausibly use in a modern
+game if you squint hard enough.
+Anyway, enough bullet points, here's some quick screenshots of where things are.
+</p>
+
+<a href="data/post7-data/scifi-helmet.png">
+    <img src="data/post7-data/scifi-helmet.png" />
+</a>
+
+<!--: ifnot post_summary -->
+
+<h2>Tiled lighting</h2>
+
+<a href="data/post7-data/tile-landscape.png">
+    <img src="data/post7-data/tile-landscape.png" />
+</a>
+<div class="video_description">~30 lights on screen, a few hundred in scene</div>
+
+<p>
+Following the ludum dare game, I had a pretty good idea of how broken
+my engine was, and what would be important to focus on to make it less broken.
+Most of the new features here are directly addressing 
+things that I wanted to do in my game, but that I couldn't do for whatever reason.
+Number one was raw scene complexity, I wanted to make a much more complex ship
+level, with glowing lighting and cool effects, but quickly ran into
+problems with just about everything. I couldn't fit in more than a few lights,
+no geometry culling meant a hard limit on level complexity (very low on webgl),
+had to spend far
+too much time tuning the level to physics that still ended up
+being horribly broken, didn't have any way to organize gameplay logic,
+performance meant having shader effects wasn't really possible, etc etc etc.
+</p>
+
+<p>
+So, I thought I'd start with the most spectacular improvement to performance
+and visual complexity, tiled lighting. Rather than a wimpy 8 lights on screen, it can now handle 90
+point lights on-screen, with a maximum of 27 in each tile, meaning you can
+throw point lights basically anywhere now. This is a huge step up for effects
+and environment lighting, since now I can stick tiny point lights on anything
+of interest, enemies, health pickups, projectiles, etc. without having to
+worry too much about performance.
+</p>
+
+<p>
+These aren't hard limits, of course, the maximum number of point lights could
+be increased
+to about 130 if point lights had a dedicated UBO, or about 500 on GPUs that
+allow 64KB UBOs, or practically any arbitrary number with SSBOs.
+But, there's not any particular reason to, tiled lighting is basically
+meant to be a transitory step to clustered lighting on desktop GPUs (which will
+require SSBOs and OpenGL 4.3+), and a performant
+fallback on mobile GPUs that can't handle that many point lights anyway.
+</p>
+
+<p>
+Similarly to Doom 2016, generation of the tilemaps happens on the CPU.
+This is actually pretty fast, building the tilemaps
+happens after rough view frustum culling, and so the generator
+only has to bin lights that will affect what's on screen.
+This puts a very manageable bound on how many lights will need to be binned,
+and makes it so that the runtime increases with on-screen scene complexity
+rather than scene size.
+Overall, profiling puts the tilemap generation step at &lt;1% total
+CPU time on the landscape scene here, pretty good methinks.
+</p>
+
+<a href="data/post7-data/tile-colors.png">
+    <img src="data/post7-data/tile-colors.png" />
+</a>
+<div class="video_description">debug view of the tilemap</div>
+<div class="video_description">greener = less lights, bluer = more lights, purple = &gt;75% used</div>
+
+<h2>Landscape demo</h2>
+
+<a href="data/post7-data/tile-gameplay.png">
+    <img src="data/post7-data/tile-gameplay.png" />
+</a>
+
+<p>
+The landscape generator has kind of become my testbed for everything, it uses
+pretty much every new feature added. Asyncronous generation for landscape meshes,
+bullet physics for collision, lots of random point lights, instanced
+landscape props, and ECS logic for entities on the map. Unlike the lighting
+stuff this doesn't lend itself as well to pictures, but the video 
+here should give a good idea of what was added.
+</p>
+
+<video controls>
+    <source src="data/3d-vids/landscape-demo-fixed.webm">
+    <p>Video 1 here, otherwise get it 
+        <a href="data/3d-vids/landscape-demo-fixed.webm">
+            here
+        </a>
+    </p>
+</video>
+<div class="video_description">Gameplay demo</div>
+
+<p>
+Visually, it needs a lot of work still, like the texture stretching on the
+landscape, or the blocky CC0 placeholder trees. One thing I'm really interested
+in doing is procedurally-generated vegetation with L-systems, so that might
+be something for the next post.
+</p>
+
+<h2>Entity-Component-System system</h2>
+
+<a href="data/post7-data/entman.png">
+    <img src="data/post7-data/entman.png" />
+</a>
+
+<p>
+The hottest new thing in game programming, of course. Attach anything to
+anything! Turn your code into
+a nest of <code>if&nbsp;(thing&nbsp;!=&nbsp;nullptr){&nbsp;...&nbsp;}</code>
+;-)! For real though, I've been skeptical of ECS for a while, the code for
+the unity ECS always looks pretty gnarly, but when it comes down to it there's
+probably not a better way to organize game logic. By nature it's something
+that has a lot of complex interaction and edge cases, no way around it. So, 
+I've decided to roll my own ECS, and the design I've settled on is sort of a hybrid
+between the regular c++-style inheritance-based class system, and the ID-based 
+style used in other ECSs. Entities and components are pointers to base
+entity/component objects, which you can <code>dynamic_cast</code> to their 
+derived types, and which can contain game logic. Components are indexed in
+the entity manager, so you can query for entities that match any set of
+attached components, sort of like a relational DB.
+Systems then use that query system to get the entities that they work on, so
+you can define systems that work on any arbitrary combination of components.
+</p>
+
+<p>
+Overall from the small amount of programming I've done with it, it seems ok so
+far. I doubt there will be any sweeping changes that will need to be made,
+definitely lots of improvements though.
+</p>
+
+<p>
+Here's a quick sample of the health pickup component, which illustrates sort
+of what the average component looks like:
+</p>
+
+<div class="code_sample">
+<!--: highlight cpp -->
+
+class healthPickupCollision : public collisionHandler {
+	float damage;
+	float lastCollision = 0;
+
+	public:
+		healthPickupCollision(entityManager *manager, entity *ent,
+		                      float _damage = 2.5f)
+			: collisionHandler(manager, ent, {"healthPickup"})
+		{
+			damage = _damage;
+			manager->registerComponent(ent, "healthPickupCollision", this);
+		}
+
+		virtual void
+		onCollision(entityManager *manager, entity *ent,
+		            entity *other, collision& col)
+		{
+			std::cerr << "health pickup collision!" << std::endl;
+			healthPickup *pickup = dynamic_cast<healthPickup*>(other);
+
+			if (pickup) {
+				pickup->apply(manager, ent);
+				manager->remove(pickup);
+			}
+		};
+};
+<!--: endhighlight -->
+</div>
+
+<p>
+As you might guess from the name, this component adds logic for handling
+collisions with health pickups. This makes specifying what can pick up
+health as simple as adding this component, which handles all the details.
+There's a collision system in the background that looks for
+<code>collisionHandler</code> components, which then calls this
+<code>onCollision()</code> here when there's an entity collision matching the
+<code>{"healthPickup"}</code> set given. Pretty snazzy eh? Starting to
+get real OOP here.
+</p>
+
+<h2>Fin.</h2>
+<p>
+Aaaand that's all for now. Things that I'm planning to work on next include
+better art, triplanar filtering and texture blending for the landscape,
+a proper resource manager with async loading,
+putting the
+octree code to work for some voxel-based destruction, procedural vegetation,
+and that sort of thing.
+Clustered lighting is in the future but not urgent, it would be pretty simple
+to add on the existing codebase (just need to add Z planes.) Beyond that,
+I'm looking at using a scripting language for abstracting away some of the
+more repetitive parts of entity/component programming, and writing/pulling in
+a framework to do nicer shader preprocessing than my rat's nest of macros.
+</p>
+
+<!--: endif -->
+
+<!--: include src/lib/blog_footer.html -->
