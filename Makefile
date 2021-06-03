@@ -26,6 +26,7 @@ directories:
 	@echo "[ ] Making needed directories"
 	@mkdir -p out
 	@cp -r src/css out
+	@cp -r src/js out
 	@cp -rn src/data out
 
 install:
