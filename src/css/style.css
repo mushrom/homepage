@@ -74,7 +74,7 @@ code {
 
 .box ul {
     margin-left: 5%;
-    padding-top: 10px;
+    padding-top: 7px;
 }
 
 .code_sample {
@@ -126,7 +126,7 @@ code {
 .blog video, img, audio {
     margin-left: auto;
     margin-right: auto;
-    width: 95%;
+    /*width: 95%;*/
     max-width: 720px;
     display: block;
     padding: 5px;
@@ -138,10 +138,14 @@ code {
     font-style: italic;
     clear: both;
     padding: 5px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .posted_date {
     float: right;
+    padding-top: 3px;
 }
 
 #plasmaArea {
