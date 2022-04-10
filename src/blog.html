@@ -3,6 +3,12 @@
     <head>
         <title>mushrom's stuff</title>
         <!--: include src/lib/meta.html -->
+        <!--: push_vars -->
+            <!--: set meta_title       My blog! -->
+            <!--: set meta_description A collection of ramblings about technology -->
+            <!--: set meta_url         http://lisp.us.to -->
+            <!--: include src/lib/metacard.html -->
+        <!--: pop_vars -->
     </head>
 
     <body>
@@ -11,33 +17,32 @@
             <!--: include src/lib/links.html -->
         </div>
 
+        <!--: set post_summary true -->
         <div class="box">
-            <!--: set post_summary true -->
+            <!--: include posts/post9.html -->
+        </div>
+
+        <div class="box">
             <!--: include posts/post8.html -->
         </div>
 
         <div class="box">
-            <!--: set post_summary true -->
             <!--: include posts/post7.html -->
         </div>
 
         <div class="box">
-            <!--: set post_summary true -->
             <!--: include posts/post6.html -->
         </div>
 
         <div class="box">
-            <!--: set post_summary true -->
             <!--: include posts/post5.html -->
         </div>
 
         <div class="box">
-            <!--: set post_summary true -->
             <!--: include posts/post4.html -->
         </div>
 
         <div class="box">
-            <!--: set post_summary true -->
             <!--: include posts/post3.html -->
         </div>
     </body>

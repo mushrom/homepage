@@ -1,9 +1,16 @@
+<!--: required blog_title -->
+<!--: required blog_date  -->
+
 <!--: ifnot post_summary -->
 <!doctype html>
 <html>
     <head>
         <title><!--: variable blog_title --></title>
         <!--: include src/lib/meta.html -->
+        <!--: TODO: remove 'if', make metacard info required -->
+        <!--: if has_metacard -->
+            <!--: include src/lib/metacard.html -->
+        <!--: endif -->
     </head>
 
     <body>

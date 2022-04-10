@@ -2,14 +2,17 @@
 # XXX: I know this is terrible python, I wrote this years ago and have been
 #      occasionally slapping new trash on the pile, need to rewrite
 import sys
+import os
 import re
 import pygments
 import pygments.lexers
 import pygments.formatters
 
-default_vars = {
+variables = {
         'templater_version': 'preproc thing'
 }
+
+var_stack = []
 
 file_commands = {
         "css"  : ("/*:",   "*/"),
@@ -24,6 +27,10 @@ do_output = True
 # TODO: wrap this all in a class
 unprinted = []
 
+def debugPrint(thing):
+    if False:
+        print(thing)
+
 def preproc_command(func):
     command_handlers.update({ func.__name__[4:] : func })
     return func
@@ -33,45 +40,94 @@ def handles_unprinted(func):
     return func
 
 @preproc_command
-def pre_include( command, output, variables ):
-    print( "    Including " + ", ".join( command[1:] ))
-    for include in command[1:]:
-        parse_file( include, output, variables )
+def pre_push_vars(command, output):
+    global variables
+    var_stack.append(variables.copy())
 
 @preproc_command
-def pre_variable( command, output, variables ):
+def pre_pop_vars(command, output):
+    global variables
+    variables = var_stack.pop()
+
+@preproc_command
+def pre_include( command, output):
+    pre_push_vars(command, output)
+
+    debugPrint( "    Including " + ", ".join( command[1:] ))
+    for include in command[1:]:
+        parse_file(include, output)
+
+    pre_pop_vars(command, output)
+
+@preproc_command
+def pre_variable(command, output):
     for var in command[1:]:
         if var in variables:
-            print( "    Variable " + var )
-            output.write( variables[var] )
+            debugPrint("    Variable " + var)
+            output.write(variables[var])
 
 @preproc_command
-def pre_set( command, output, variables ):
+def pre_set(command, output):
     variables.update({ command[1] : " ".join( command[2:] )})
-    print( "    Set variable " + command[1] + " to " + variables[ command[1] ] )
+    debugPrint("    Set variable " + command[1] + " to " + variables[command[1]])
 
 @preproc_command
-def pre_if( command, output, variables ):
-    global do_output
-
-    condition = variables.get(command[1]) or "false"
-    do_output = condition == "true";
-
-    print( "    if " + command[1] + ": " + condition );
+def pre_error(command, output):
+    raise Exception(" ".join(command[1:]))
 
 @preproc_command
-def pre_ifnot( command, output, variables ):
+def pre_required(command, output):
+    var = command[1]
+
+    if variables.get(var) == None:
+        raise Exception("variable %s must be set" % var)
+
+if_levels = 0
+@handles_unprinted
+@preproc_command
+def pre_if(command, output):
     global do_output
+    global if_levels
 
-    condition = variables.get(command[1]) or "false"
-    do_output = condition != "true";
+    if do_output:
+        condition = variables.get(command[1]) or "false"
+        do_output = condition == "true";
+        debugPrint("    if " + command[1] + ": " + condition);
 
-    print( "    ifnot " + command[1] + ": " + condition );
+    if not do_output:
+        if_levels += 1;
+
+@handles_unprinted
+@preproc_command
+def pre_ifnot(command, output):
+    global do_output
+    global if_levels
+
+    if do_output:
+        condition = variables.get(command[1]) or "false"
+        do_output = condition != "true";
+        debugPrint("    ifnot " + command[1] + ": " + condition);
+
+    if not do_output:
+        if_levels += 1;
+
+@handles_unprinted
+@preproc_command
+def pre_endif(command, output):
+    global do_output
+    global if_levels
+
+    if not do_output:
+        if_levels -= 1
+
+    if if_levels <= 0:
+        do_output = True
+        if_levels = 0
 
 highlight_lexer = None
 highlight_mode = False
 @preproc_command
-def pre_highlight(command, output, variables):
+def pre_highlight(command, output):
     global do_output
     global highlight_mode
     global highlight_lexer
@@ -80,11 +136,11 @@ def pre_highlight(command, output, variables):
     do_output = False;
     highlight_mode = True;
 
-    print("    highlight " + highlight_lexer);
+    debugPrint("    highlight " + highlight_lexer);
 
 @handles_unprinted
 @preproc_command
-def pre_endhighlight(command, output, variables):
+def pre_endhighlight(command, output):
     global do_output
     global highlight_mode
     global unprinted
@@ -104,9 +160,9 @@ def pre_endhighlight(command, output, variables):
     highlight_mode = False
     unprinted = []
 
-    print("    endhighlight, style = ", style);
+    debugPrint("    endhighlight, style = " + style);
 
-def parse_file( input_name, output, variables ):
+def parse_file(input_name, output):
     global do_output
     global unprinted
 
@@ -140,18 +196,15 @@ def parse_file( input_name, output, variables ):
 
             # evaluate the command
             if len(command) == 0:
-                print( "    Warning: empty command tag at "
-                       + input_name + ":" + str( line_num ))
+                debugPrint("    Warning: empty command tag at "
+                           + input_name + ":" + str(line_num))
 
             elif command[0] in command_handlers and (do_output or command[0] in unprinted_handlers):
-                command_handlers[command[0]]( command, output, variables )
-
-            elif command[0] == "endif":
-                do_output = True;
+                command_handlers[command[0]](command, output)
 
             else:
-                print( "    ignoring command '" + command[0] +
-                       "' at " + input_name + ":" + str( line_num ))
+                debugPrint("    ignoring command '" + command[0] +
+                           "' at " + input_name + ":" + str(line_num))
 
             if do_output:
                 output.write( tail )
@@ -166,9 +219,16 @@ def parse_file( input_name, output, variables ):
         line_num += 1
 
 def parse_template( input_name, output_name ):
-    output_file = open( output_name, "w" )
-    parse_file( input_name, output_file, default_vars );
-    output_file.close()
+    try:
+        output_file = open(output_name, "w")
+        parse_file(input_name, output_file);
+        output_file.close()
+
+    except Exception as e:
+        print("Error: %s" % e)
+        output_file.close();
+        os.remove(output_name)
+        exit(1)
 
 if __name__ == "__main__":
     if len( sys.argv ) < 3:
